@@ -1,0 +1,341 @@
+-- cleaning data in SQL Queries
+
+
+-- Call data 
+Select * FROM NashvilleHousingUT; 
+
+
+-- Standardize Date Format -> from January 10, 2011 to 01/10/2011
+
+SELECT SaleDate, 
+        SUBSTR(SaleDate, instr(SaleDate, ',') + 2) || '-' ||
+        printf('%02d',
+         CASE substr(SaleDate, 0, instr(SaleDate, ' '))
+             WHEN 'January' THEN 1
+             WHEN 'February' THEN 2
+             WHEN 'March' THEN 3
+             WHEN 'April' THEN 4
+             WHEN 'May' THEN 5
+             WHEN 'June' THEN 6
+             WHEN 'July' THEN 7
+             WHEN 'August' THEN 8
+             WHEN 'September' THEN 9
+             WHEN 'October' THEN 10
+             WHEN 'November' THEN 11
+             WHEN 'December' THEN 12
+          END)  || '-' ||
+        printf('%02d',
+        substr(
+         substr(SaleDate, 0, instr(SaleDate, ',')),
+         instr(substr(SaleDate, 0, instr(SaleDate, ',')), ' ')+1
+         )) as Sale_Date
+FROM NashvilleHousingUT;
+
+Update NashvilleHousingUT
+Set SaleDate = SUBSTR(SaleDate, instr(SaleDate, ',') + 2) || '-' ||
+        printf('%02d',
+         CASE substr(SaleDate, 0, instr(SaleDate, ' '))
+             WHEN 'January' THEN 1
+             WHEN 'February' THEN 2
+             WHEN 'March' THEN 3
+             WHEN 'April' THEN 4
+             WHEN 'May' THEN 5
+             WHEN 'June' THEN 6
+             WHEN 'July' THEN 7
+             WHEN 'August' THEN 8
+             WHEN 'September' THEN 9
+             WHEN 'October' THEN 10
+             WHEN 'November' THEN 11
+             WHEN 'December' THEN 12
+          END)  || '-' ||
+        printf('%02d',
+        substr(
+         substr(SaleDate, 0, instr(SaleDate, ',')),
+         instr(substr(SaleDate, 0, instr(SaleDate, ',')), ' ')+1
+         ));
+         
+-- check updated data 
+Select SaleDate 
+FROM NashvilleHousingUT;
+
+
+-- Populate Property Address Data
+
+
+SELECT PropertyAddress
+FROM NashvilleHousingUT
+WHERE PropertyAddress IS NULL;
+
+
+
+SELECT * FROM NashvilleHousingUT
+WHERE PropertyAddress IS NULL;
+
+
+SELECT * FROM NashvilleHousingUT
+--WHERE PropertyAddress IS NULL;
+order by ParcelID;
+
+
+
+-- using COALESCE  --> returns first non-null value
+SELECT 
+    a.ParcelID, a.PropertyAddress, 
+    b.ParcelID, b.PropertyAddress, 
+    COALESCE(a.PropertyAddress, b.PropertyAddress) AS MergedProperty
+FROM NashvilleHousingUT a
+JOIN NashvilleHousingUT b
+    ON a.ParcelID = b.ParcelID
+    AND a.UniqueID <> b.UniqueID
+WHERE a.PropertyAddress IS NULL;
+
+
+-- MergedProperty row will eventually be PropertyAdress w NULLs
+
+
+UPDATE a 
+SET PropertyAddress = COALESCE(a.PropertyAddress, b.PropertyAddress)
+FROM NashvilleHousingUT a
+JOIN NashvilleHousingUT b
+    ON a.ParcelID = b.ParcelID
+    AND a.UniqueID <> b.UniqueID
+WHERE a.PropertyAddress IS NULL;
+
+-- subquery to update 
+
+UPDATE NashvilleHousingUT
+SET PropertyAddress = COALESCE(PropertyAddress, (
+    SELECT b.PropertyAddress
+    FROM NashvilleHousingUT b
+    WHERE NashvilleHousingUT.ParcelID = b.ParcelID
+      AND NashvilleHousingUT.UniqueID <> b.UniqueID
+      AND b.PropertyAddress IS NOT NULL
+    LIMIT 1
+))
+WHERE PropertyAddress IS NULL;
+
+-- to check 
+SELECT * FROM NashvilleHousingUT
+WHERE PropertyAddress IS NULL;
+
+
+
+
+
+-- Breaking out Address into Individual Columns( Address, City, State)
+Select PropertyAddress 
+FROM NashvilleHousingUT;
+-- comma used as a delimiter/separator between address and city 
+
+-- using substring to start at position 1 and end when it finds a comma ','
+
+
+SELECT 
+    SUBSTR(PropertyAddress, 1, INSTR(PropertyAddress, ',')) AS Address
+FROM NashvilleHousingUT;
+
+-- we're getting the comma in the address, but we don't want it 
+
+-- use this code to figure out the position of the comma
+SELECT 
+    SUBSTR(PropertyAddress, 1, INSTR(PropertyAddress, ',')) AS Address,
+    INSTR(PropertyAddress, ',') AS CommaPosition
+FROM NashvilleHousingUT;
+
+
+SELECT 
+    SUBSTR(PropertyAddress, 1, INSTR(PropertyAddress, ',') - 1) AS Address
+FROM NashvilleHousingUT;
+
+
+
+SELECT 
+    SUBSTR(PropertyAddress, 1, INSTR(PropertyAddress, ',') - 1) AS Address, 
+    SUBSTR(PropertyAddress, INSTR(PropertyAddress, ',') + 1, LENGTH(PropertyAddress)) AS City
+FROM NashvilleHousingUT;
+
+
+
+-- can't separate two values from a column w/out creating two other columns
+-- we'll create two new columns and add the value in
+
+
+ALTER TABLE NashvilleHousingUT 
+    ADD PropertySplitAddress Nvarchar(255);
+
+UPDATE NashvilleHousingUT
+SET PropertySplitAddress = SUBSTR(PropertyAddress, 1, INSTR(PropertyAddress, ',') - 1);
+    
+
+ALTER TABLE NashvilleHousingUT 
+    ADD PropertySplitCity Nvarchar(255);
+
+UPDATE NashvilleHousingUT
+SET PropertySplitCity = SUBSTR(PropertyAddress, INSTR(PropertyAddress, ',') + 1, LENGTH(PropertyAddress)) ;
+
+
+-- now we have two new columns of the split address 
+Select * FROM NashvilleHousingUT;
+
+
+
+-- now do the same for owner address
+
+Select OwnerAddress
+FROM NashvilleHousingUT;
+
+
+SELECT 
+    SUBSTR(OwnerAddress, 1, INSTR(OwnerAddress, ', ') - 1) AS Address,
+    SUBSTR(
+        OwnerAddress,
+        INSTR(OwnerAddress, ', ') + 2,
+        INSTR(SUBSTR(OwnerAddress, INSTR(OwnerAddress, ', ') + 2), ', ') - 1
+    ) AS City,
+    SUBSTR(OwnerAddress, -2) AS State
+FROM NashvilleHousingUT;
+
+
+
+
+-- Now ALTER,ADD, and UPDATE
+
+-- Alter/Update Owner Address
+ALTER TABLE NashvilleHousingUT 
+    ADD OwnerSplitAddress Nvarchar(255);
+
+UPDATE NashvilleHousingUT
+SET OwnerSplitAddress = SUBSTR(OwnerAddress, 1, INSTR(OwnerAddress, ', ') - 1);
+    
+-- Alter/Update Owner City
+ALTER TABLE NashvilleHousingUT 
+    ADD OwnerSplitCity Nvarchar(255);
+
+UPDATE NashvilleHousingUT
+SET OwnerSplitCity = SUBSTR(
+        OwnerAddress,
+        INSTR(OwnerAddress, ', ') + 2,
+        INSTR(SUBSTR(OwnerAddress, INSTR(OwnerAddress, ', ') + 2), ', ') - 1
+    );
+
+--Alter/Update Owner State
+ALTER TABLE NashvilleHousingUT 
+    ADD OwnerSplitState Nvarchar(255);
+
+UPDATE NashvilleHousingUT
+SET OwnerSplitState =  SUBSTR(OwnerAddress, -2);
+
+
+-- now check 
+select * from NashvilleHousingUT;
+
+
+
+
+
+
+
+-- Change Y and N to Yes and No in 'Sold as Vacant' field
+
+SELECT Distinct(SoldAsVacant), Count(SoldAsVacant)
+FROM NashvilleHousingUT
+Group BY SoldAsVacant;
+
+-- accurate one
+SELECT Distinct(SoldAsVacant), Count(SoldAsVacant)
+FROM NashvilleHousingUT
+Group BY SoldAsVacant
+Order BY 2;
+
+-- change Y and N to Yes and No using CASE
+
+Select 
+    SoldAsVacant,
+    CASE 
+        WHEN SoldAsVacant = 'Y' THEN 'Yes'
+        WHEN SoldAsVacant = 'N' THEN 'No'
+        ELSE SoldAsVacant
+    END AS SoldAsVacantRevised
+FROM NashvilleHousingUT;
+
+
+-- UPDATE IT 
+UPDATE NashvilleHousingUT
+Set SoldAsVacant = CASE 
+        WHEN SoldAsVacant = 'Y' THEN 'Yes'
+        WHEN SoldAsVacant = 'N' THEN 'No'
+        ELSE SoldAsVacant
+    END;
+
+-- check to see update
+SELECT Distinct(SoldAsVacant), Count(SoldAsVacant)
+FROM NashvilleHousingUT
+Group BY SoldAsVacant
+Order BY 2;
+
+
+
+
+-- Remove duplicates
+
+
+-- partition on something that's unique
+SELECT *, 
+    ROW_NUMBER() OVER (
+    PARTITION BY  ParcelID,
+                  PropertyAddress, 
+                  SalePrice, 
+                  SaleDate, 
+                  LegalReference
+                  ORDER BY 
+                      UniqueID
+                      ) row_num
+ FROM NashvilleHousingUT
+ Order By ParcelId
+ Where row_num > 1; -- bc we're trying to see if there are any that are >1 we need a CTE
+ 
+WITH RowNumCTE As(
+SELECT *, 
+    ROW_NUMBER() OVER (
+    PARTITION BY  ParcelID,
+                  PropertyAddress, 
+                  SalePrice, 
+                  SaleDate, 
+                  LegalReference
+                  ORDER BY 
+                      UniqueID
+                      ) row_num
+ FROM NashvilleHousingUT
+ Order by ParcelID)
+ 
+
+-- These are all duplicates  -> only 104
+Select * FROM RowNumCTE
+where row_num >1
+Order by PropertyAddress;
+-- we want to delete them 
+
+-- delete duplicates
+DELETE 
+FROM RowNumCTE
+Where row_num > 1;
+ 
+
+
+-- Delete unused columns
+-- purpose is to clean up the data + make it useable 
+
+
+ALTER TABLE NashvilleHousingUT
+DROP COLUMN OwnerAddress, PropertyAddress, TaxDistrict;
+
+
+ALTER TABLE NashvilleHousingUT
+DROP COLUMN SaleDate;
+
+
+SELECT * FROM NashvilleHousingUT;
+
+
+
+
