@@ -1,0 +1,171 @@
+
+
+/*This table of logs shows how many donuts Winston eats at each year of his life, plus any particular reason to explain his eating habits. */
+
+CREATE TABLE winstons_donut_logs (
+    id TEXT PRIMARY KEY,
+    status TEXT,
+    years_old INTEGER,
+    donuts_eaten INTEGER,
+    reason TEXT
+    );
+INSERT INTO winstons_donut_logs VALUES (0, "new born winston lvl 0", 0, 0, "");
+INSERT INTO winstons_donut_logs VALUES (1, "baby winston lvl1", 1, 10, "(Gummed)");
+INSERT INTO winstons_donut_logs VALUES (2, "baby winston lvl2", 2, 40, "(Gummed)");
+INSERT INTO winstons_donut_logs VALUES (3, "baby winston lvl3", 3, 50, "(Gummed)");
+INSERT INTO winstons_donut_logs VALUES (4, "toddler winston lvl1", 4, 300, "");
+INSERT INTO winstons_donut_logs VALUES (5, "toddler winston lvl2", 5, 400, "");
+INSERT INTO winstons_donut_logs VALUES (6, "kid winston lvl1", 6, 1200, "");
+INSERT INTO winstons_donut_logs VALUES (7, "kid winston lvl2", 7, 1000, "");
+INSERT INTO winstons_donut_logs VALUES (8, "kid winston lvl3", 8, 1000, "");
+INSERT INTO winstons_donut_logs VALUES (9, "kid winston lvl4", 9, 1000, "");
+INSERT INTO winstons_donut_logs VALUES (10, "winstween lvl1", 10, 1500, "");/** tween means someone between 10 and 12 so I did winstween- tween not teen**/
+INSERT INTO winstons_donut_logs VALUES (11, "winstween lvl2", 11, 500, "Braces");
+INSERT INTO winstons_donut_logs VALUES (12, "winstween lvl3", 12, 300, "Braces");
+INSERT INTO winstons_donut_logs VALUES (13, "winsteen lvl1", 13, 400, "Braces");
+INSERT INTO winstons_donut_logs VALUES (14, "winsteen lvl2", 14, 1300, "No Braces");
+INSERT INTO winstons_donut_logs VALUES (15, "winsteen lvl3", 15, 2000, "");
+INSERT INTO winstons_donut_logs VALUES (16, "winsteen lvl4", 16, 2000, "");
+INSERT INTO winstons_donut_logs VALUES (17, "winsteen lvl5", 17, 2000, "");
+INSERT INTO winstons_donut_logs VALUES (18, "winsteen lvl6", 18, 2000, "");
+INSERT INTO winstons_donut_logs VALUES (19, "winsteen lvl7", 19, 2000, "");
+INSERT INTO winstons_donut_logs VALUES (20, "young adult winston lvl1", 20, 2000, "");
+INSERT INTO winstons_donut_logs VALUES (21, "young adult winston lvl2", 21, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (22, "young adult winston lvl3", 22, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (23, "young adult winston lvl4", 23, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (24, "young adult winston lvl5", 24, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (25, "young adult winston lvl6", 25, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (26, "young adult winston lvl7", 26, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (27, "young adult winston lvl8", 27, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (28, "young adult winston lvl9", 28, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (29, "young adult winston lvl10", 29, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (30, "mature adult winston lvl1", 30, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (31, "mature adult winston lvl2", 31, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (32, "mature adult winston lvl3", 32, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (33, "mature adult winston lvl4", 33, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (34, "mature adult winston lvl5", 34, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (35, "mature adult winston lvl6", 35, 1500, "Healthier Eating");
+INSERT INTO winstons_donut_logs VALUES (36, "mature adult winston lvl7", 36, 1500, "Healthier Eating");
+INSERT INTO winstons_donut_logs VALUES (37, "mature adult winston lvl8", 37, 1500, "Healthier Eating");
+INSERT INTO winstons_donut_logs VALUES (38, "mature adult winston lvl9", 38, 1500, "Healthier Eating");
+INSERT INTO winstons_donut_logs VALUES (39, "mature adult winston lvl10", 39, 1500, "Healthier Eating");
+INSERT INTO winstons_donut_logs VALUES (40, "middle-aged adult winston lvl1", 40, 2500, "Non-healthy eating");
+INSERT INTO winstons_donut_logs VALUES (41, "middle-aged adult winston lvl2", 41, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (42, "middle-aged adult winston lvl3", 42, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (43, "middle-aged adult winston lvl4", 43, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (44, "middle-aged adult winston lvl5", 44, 300, "Diet");
+INSERT INTO winstons_donut_logs VALUES (45, "middle-aged adult winston lvl6", 45, 200, "Diet");
+INSERT INTO winstons_donut_logs VALUES (46, "middle-aged adult winston lvl7", 46, 150, "Diet");
+INSERT INTO winstons_donut_logs VALUES (47, "middle-aged adult winston lvl8", 47, 150, "Diet");
+INSERT INTO winstons_donut_logs VALUES (48, "middle-aged adult winston lvl9", 48, 150, "Diet");
+INSERT INTO winstons_donut_logs VALUES (49, "middle-aged adult winston lvl10", 49, 150, "Diet");
+INSERT INTO winstons_donut_logs VALUES (50, "old-ish adult winston lvl1", 50, 2500, "No diet");
+INSERT INTO winstons_donut_logs VALUES (51, "old-ish adult winston lvl2", 51, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (52, "old-ish adult winston lvl3", 52, 2500, "");
+INSERT INTO winstons_donut_logs VALUES (53, "old-ish adult winston lvl4", 53, 1436, "Current age");
+
+
+/*this is the max number of donuts he has eaten in any given year */
+SELECT MAX(donuts_eaten)AS max_number_of_donuts FROM winstons_donut_logs;
+
+/*the avg number of donuts he eats in any given year*/
+SELECT AVG(donuts_eaten) AS avg_donuts_eaten FROM winstons_donut_logs;
+
+/*the min number of donuts he has eaten in any given year*/
+SELECT MIN(donuts_eaten) AS min_donuts_eaten FROM winstons_donut_logs;
+
+ 
+ /*to filter all the times he's eaten above the average which is about 1546.96 but less than the max*/
+SELECT status, SUM(donuts_eaten) AS sum_of_donut_consumption FROM winstons_donut_logs GROUP BY status HAVING sum_of_donut_consumption >=1546.96 AND sum_of_donut_consumption<2500;
+/* he indulged moderately as a teen */
+
+
+-- Select the status and donuts_eaten columns
+SELECT status, donuts_eaten,
+    -- Categorize individuals based on donut consumption
+    CASE
+        WHEN donuts_eaten > 1875 THEN "Over Indulgent"
+        WHEN donuts_eaten > 1250 THEN "Moderately Indulgent"
+        WHEN donuts_eaten > 625 THEN "Indulgent"
+        ELSE "Diet/Baby"
+    END AS "To_indulge_or_not"
+FROM winstons_donut_logs;
+
+-- To summarize the data and provide a count of records in each category of donut consumption. It groups the data by the "To_indulge_or_not" category and counts the number of records in each group.
+SELECT COUNT(*) AS count,
+    CASE
+        WHEN donuts_eaten > 1875 THEN "Over Indlugent"
+        WHEN donuts_eaten >1250 THEN "Moderately Indlugent"
+        WHEN donuts_eaten > 625 THEN "Indulgent"
+        ELSE "Diet/Baby"
+    END AS "To_indulge_or_not"
+FROM winstons_donut_logs
+GROUP BY To_indulge_or_not;
+-- throughout Winston's life, he's been mostly overly indulgent.
+ 
+
+
+
+-- to observe winton's changing eating habits
+SELECT years_old, donuts_eaten, reason 
+FROM winstons_donut_logs 
+WHERE reason = "Healthier Eating";
+
+-- how many donuts he's eating on avg while practicing Healthy Eating
+SELECT AVG(donuts_eaten) AS avg_donut_eaten, reason 
+FROM winstons_donut_logs
+WHERE reason = "Healthier Eating";
+
+
+-- how many donuts he's eating while on a diet
+SELECT AVG(donuts_eaten) AS avg_donuts_eaten_while_dieting, reason FROM winstons_donut_logs WHERE reason = "Diet";
+
+ 
+ /* this shows me how many donuts were eaten when dieting/healthy eating */
+
+SELECT SUM(donuts_eaten) AS dieting_or_healthy, years_old
+FROM winstons_donut_logs
+WHERE (reason = 'Healthier Eating' OR reason = 'Diet')
+GROUP BY years_old
+HAVING dieting_or_healthy > 0
+ORDER BY years_old ASC;
+-- Winston becoming more health conscious as he ages
+
+
+
+-- This is the average donuts eaten for each lifestage,
+WITH Lifestage AS (
+    SELECT
+        CASE
+            WHEN status LIKE 'newborn%' OR status LIKE 'baby%' THEN 'baby'
+            WHEN status LIKE 'toddler%' THEN 'toddler'
+            WHEN status LIKE 'kid%' THEN 'kid'
+            WHEN status LIKE 'winstween%' THEN 'tween'
+            WHEN status LIKE 'winsteen%' THEN 'teen'
+            WHEN status LIKE 'young adult%' THEN 'young adult'
+            WHEN status LIKE 'mature adult%' THEN 'mature adult'
+            WHEN status LIKE 'middle%' THEN 'middle-aged'
+            WHEN status LIKE 'old%' THEN 'old-ish adult'
+            ELSE 'Unknown' -- or another suitable category for unmatched status
+        END AS "lifestage",
+        donuts_eaten
+    FROM winstons_donut_logs
+)
+
+SELECT "lifestage", AVG(donuts_eaten) AS avg_donuts_eaten
+FROM Lifestage
+GROUP BY "lifestage"
+ORDER BY 
+    CASE 
+        WHEN "lifestage" = 'baby' THEN 1
+        WHEN "lifestage" = 'toddler' THEN 2
+        WHEN "lifestage" = 'kid' THEN 3
+        WHEN "lifestage" = 'tween' THEN 4
+        WHEN "lifestage" = 'teen' THEN 5
+        WHEN "lifestage" = 'young adult' THEN 6
+        WHEN "lifestage" = 'mature adult' THEN 7
+        WHEN "lifestage" = 'middle-aged' THEN 8
+        WHEN "lifestage" = 'old-ish adult' THEN 9
+    END;
+
+
