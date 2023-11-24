@@ -1,0 +1,378 @@
+-- Select all the information I'll be working with and observe each column and types of values I have. 
+SELECT * FROM heart_data;
+
+
+
+-- Data cleaning and Data Manipulation:
+-- Reformatted BMI values to have consistent two decimal places.
+SELECT BMI, printf("%.2f", BMI) AS FormattedBMI FROM heart_data;
+
+
+-- -- Altered table structure: Added a new column 'FormattedBMI' for enhanced BMI formatting.
+ALTER TABLE heart_data
+ADD FormattedBMI; -- this is a numeric datatype
+
+
+UPDATE heart_data
+SET FormattedBMI = printf("%.2f", BMI);
+
+ 
+Select FormattedBMI FROM heart_data; -- Checking to see new column 
+
+
+-- Standardizing GenHealth values: 1 = Poor, 2 = Fair, 3 = Good, 4 = Very Good, 5 = Excellent
+
+
+
+AlTER TABLE heart_data ADD CleanGenHealth NUMERIC;
+
+UPDATE heart_data
+SET CleanGenHealth = 
+    CASE GenHealth 
+        WHEN "Poor" THEN 1
+        WHEN "Fair" THEN 2
+        WHEN "Good" THEN 3
+        WHEN "Very good" THEN 4
+        ELSE 5
+    END; 
+
+SELECT CleanGenHealth FROM heart_data;
+
+-- Standardizing Diabetes column: 
+-- 1 = Yes, 2 = No, 3 = Borderline diabetes
+
+
+ALTER TABLE heart_data ADD Diabetes Numeric;
+
+UPDATE heart_data 
+SET Diabetes = 
+    CASE Diabetic
+        WHEN "Yes" THEN 1
+        WHEN "No" THEN 2
+        WHEN "No, borderline diabetes" THEN 3
+    END;
+    
+SELECT Diabetes, Diabetic FROM heart_data;
+
+
+-- Generating a uniqueID based on Sex, BMI, HeartDisease, Age, Race, GenHealth, and Sleeptime
+
+ALTER TABLE heart_data ADD UniqueID TEXT; 
+
+UPDATE heart_data
+SET UniqueID = 
+    SUBSTRING(Sex, 1, 1) || 
+    SUBSTRING(FormattedBMI, 4,5) || 
+    SUBSTRING(HeartDisease, 1, 1) || 
+    SUBSTRING(AgeCategory, 1, 2) || 
+    CleanGenHealth || 
+    SUBSTRING(GenHealth, 1, 1) ||
+    SUBSTR(SleepTime, 1, 1) ||
+    SUBSTRING(FormattedBMI, 1, 2)                      
+;
+
+
+
+-- Comparison of uniqueID against existing data to eliminate duplicate entries
+-- Verification to ensure each uniqueID conforms to the expected length of 11 characters
+
+SELECT LENGTH(UniqueID) AS UniqueID_Length, UniqueID
+FROM heart_data
+WHERE LENGTH(UniqueID) <> 11 OR LENGTH(UniqueID) IS NULL;  -- Filtering records where UniqueID length is not 11 or is NULL
+
+
+
+-- The number of records distinct records that come up using only the UniqueID created matches with the number of remaning records after deletion using ROWID.      
+DELETE FROM heart_data
+-- Exclude rows with the minimum ROWID within each group of duplicates
+WHERE ROWID NOT IN (
+    -- Select the minimum ROWID for each UniqueID group
+    SELECT MIN(ROWID)
+    FROM heart_data
+    -- Group rows by UniqueID
+    GROUP BY UniqueID
+);
+
+
+-- Calculation of the percentage of individuals with heart disease from the entire dataset
+Select 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN HeartDisease = 'No' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as PercentHeartDisease
+FROM heart_data;
+
+-- Analysis: Approximately 15.7% of the dataset's entries indicate the presence of heart disease.
+
+
+
+
+-- Comparative Analysis: Assessing the relative occurrence of heart disease between genders (male and female).
+
+Select 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as HeartDisease_Female, 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as HeartDisease_Male
+FROM heart_data;
+
+-- Male individuals are more likely to present with Heart Disease compared to Female individuals.
+
+
+
+
+
+-- Comparative Analysis: Assessing the occurrence of heart disease in the general population and exploring the contrast in heart disease rates between men, women, and the average population.
+
+Select 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN HeartDisease = 'No' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as HeartDisease_GenPop, 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as HeartDisease_Female, 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as HeartDisease_Male
+FROM heart_data;
+
+-- Analysis: Female individuals exhibit a heart disease rate lower than the average observed in the general population, whereas Male individuals show a slightly higher rate compared to the overall population average.
+
+
+
+-- Comparative Study: Assessing the disparity in heart disease likelihood between males and females across distinct age categories.
+Select AgeCategory, 
+ (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as HeartDisease_Female, 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' as HeartDisease_Male
+FROM heart_data
+GROUP BY AgeCategory;
+
+-- Analysis Insight: Evident rise in heart disease occurrence correlated with advancing age, notably prominent in the male demographic.
+
+
+
+-- Comparative Analysis: Examining the incidence of heart disease between genders across diverse racial categories.
+
+Select Race, 
+ (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' AS HeartDisease_Female, 
+    (
+        ROUND(
+            SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END), 4
+        ) * 100 
+    ) ||'%' AS HeartDisease_Male
+FROM heart_data
+GROUP BY Race;
+-- Among females, individuals of American Indian/Alaskan Native descent exhibit the highest incidence of heart disease compared to other female racial groups. 
+-- Conversely, among males, those identifying as White have the highest incidence of heart disease in comparison to all other male racial groups.
+
+
+
+
+
+-- Risk Factors in indivisuals with Heart Disease:
+
+-- Compare the average sleep time, standardized General Health, smoking habits, and BMI among females and males across different racial groups in both individuals with and without heart disease.
+SELECT 
+    Race,
+    ROUND(AVG(SleepTime), 2) ||' hours' AS AvgSleep, 
+    ROUND(AVG(CleanGenHealth), 2) || ' out of 5' AS GeneralHealth, 
+    GenHealth,
+    (ROUND((SUM(CASE WHEN Smoking = 'Yes'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END)), 2)*100) || '%' AS Smokes,
+    (ROUND((SUM(CASE WHEN Smoking = 'No'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END)), 2)*100) || '%' AS NoSmoke,
+    ROUND(AVG(BMI), 2) AS AvgBMI , 
+    CASE 
+        WHEN AVG(BMI) > 30 THEN 'Obese'
+        WHEN AVG(BMI) >= 25.0 AND AVG(BMI) <= 29.9 THEN 'Overweight'
+        WHEN AVG(BMI) >=18.5 AND AVG(BMI) <= 24.9 then 'Healthy'
+        ELSE 'Underweight'
+    END AS 'BMI_Range'
+FROM heart_data
+WHERE Sex = 'Female' AND HeartDisease = 'Yes'
+GROUP BY Race;
+-- Asian females with heart disease (HD) tend to sleep less than the recommended minimum of 7 hours, and their average BMI is slightly higher than the recommended range. They generally exhibit 'good' overall health.
+
+-- American Indian/Alaskan Native females with heart disease (HD) get the minimum recommended 7 hours of sleep but have a higher BMI. They trend towards 'fair' general health.
+
+
+
+SELECT 
+    Race,
+    ROUND(AVG(SleepTime), 2) ||' hours' AS AvgSleep, 
+    ROUND(AVG(CleanGenHealth), 2) || ' out of 5' AS GeneralHealth, 
+    GenHealth,
+    (ROUND((SUM(CASE WHEN Smoking = 'Yes'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END)), 2)*100) || '%' AS Smokes,
+    (ROUND((SUM(CASE WHEN Smoking = 'No'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END)), 2)*100) || '%' AS NoSmoke,
+    ROUND(AVG(BMI), 2) AS AvgBMI , 
+    CASE 
+        WHEN AVG(BMI) > 30 THEN 'Obese'
+        WHEN AVG(BMI) >= 25.0 AND AVG(BMI) <= 29.9 THEN 'Overweight'
+        WHEN AVG(BMI) >=18.5 AND AVG(BMI) <= 24.9 then 'Healthy'
+        ELSE 'Underweight'
+    END AS 'BMI_Range'
+FROM heart_data
+WHERE Sex = 'Female' AND HeartDisease = 'No'
+GROUP BY Race;
+
+-- Females with the No HD trend better general health, lesser likelihood of smoking, about the same amount of sleep, and slightly higher BMIs.
+
+
+
+
+SELECT 
+    Race,
+    ROUND(AVG(SleepTime), 2) ||' hours' AS AvgSleep, 
+    ROUND(AVG(CleanGenHealth), 2) || ' out of 5' AS GeneralHealth, 
+    GenHealth,
+    (ROUND((SUM(CASE WHEN Smoking = 'Yes'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END)), 2)*100) || '%' AS Smokes,
+    (ROUND((SUM(CASE WHEN Smoking = 'No'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END)), 2)*100) || '%' AS NoSmoke,
+    ROUND(AVG(BMI), 2) AS AvgBMI , 
+    CASE 
+        WHEN AVG(BMI) > 30 THEN 'Obese'
+        WHEN AVG(BMI) >= 25.0 AND AVG(BMI) <= 29.9 THEN 'Overweight'
+        WHEN AVG(BMI) >=18.5 AND AVG(BMI) <= 24.9 then 'Healthy'
+        ELSE 'Underweight'
+    END AS 'BMI_Range'
+FROM heart_data
+WHERE Sex = 'Male' AND HeartDisease = 'Yes'
+GROUP BY Race;
+
+-- American Indian/Alaskan Natives exhibit the least amount of sleep, are more likely to smoke, tend to be overweight, and have poorer general health.
+
+-- Asian men, on average, get around the recommended amount of sleep, have fair general health, are the least likely to smoke, and have a tendency to be overweight.
+
+
+SELECT 
+    Race,
+    ROUND(AVG(SleepTime), 2) ||' hours' AS AvgSleep, 
+    ROUND(AVG(CleanGenHealth), 2) || ' out of 5' AS GeneralHealth, 
+    GenHealth,
+    (ROUND((SUM(CASE WHEN Smoking = 'Yes'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END)), 2)*100) || '%' AS Smokes,
+    (ROUND((SUM(CASE WHEN Smoking = 'No'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0 / SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END)), 2)*100) || '%' AS NoSmoke,
+    ROUND(AVG(BMI), 2) AS AvgBMI , 
+    CASE 
+        WHEN AVG(BMI) > 30 THEN 'Obese'
+        WHEN AVG(BMI) >= 25.0 AND AVG(BMI) <= 29.9 THEN 'Overweight'
+        WHEN AVG(BMI) >=18.5 AND AVG(BMI) <= 24.9 then 'Healthy'
+        ELSE 'Underweight'
+    END AS 'BMI_Range'
+FROM heart_data
+WHERE Sex = 'Male' AND HeartDisease = 'No'
+GROUP BY Race;
+
+-- Men with no HD trend about the same amount of sleep, general health, and smoking habits. They are more likely to have slightly higher BMIs.
+
+
+
+-- Explore the age groups at which the incidence of heart disease starts to increase in females versus males.
+
+WITH SignifHD AS (
+    Select 
+        AgeCategory, 
+        (ROUND
+            (
+                SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Female' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END), 4
+            ) * 100 
+        ) ||'%' as HeartDisease_Female
+    FROM heart_data
+    GROUP BY AgeCategory
+)
+SELECT 
+    AgeCategory,
+    HeartDisease_Female,
+    (LEAD(HeartDisease_Female) OVER (ORDER BY row_number) - HeartDisease_Female) ||'%' AS Difference
+
+FROM (
+    SELECT
+        AgeCategory, 
+        HeartDisease_Female,
+        ROW_NUMBER() OVER (ORDER BY AgeCategory) AS row_number 
+    FROM SignifHD
+) AS numbered_table
+ORDER BY Difference DESC;
+
+-- The most significance increase in the occurence of HD in this group occurs in Females aged 75-79.
+
+WITH SignifHD AS (
+    Select 
+        AgeCategory, 
+        (ROUND
+            (
+                SUM(CASE WHEN HeartDisease = 'Yes'  AND Sex = 'Male' THEN 1 ELSE 0 END)* 1.0/  SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END), 4
+            ) * 100 
+        ) ||'%' as HeartDisease_Male
+    FROM heart_data
+    GROUP BY AgeCategory
+)
+SELECT 
+    AgeCategory,
+    HeartDisease_Male,
+    (LEAD(HeartDisease_Male) OVER (ORDER BY row_number) - HeartDisease_Male) ||'%' AS Difference
+
+FROM (
+    SELECT
+        AgeCategory, 
+        HeartDisease_Male,
+        ROW_NUMBER() OVER (ORDER BY AgeCategory) AS row_number 
+    FROM SignifHD
+) AS numbered_table
+ORDER BY Difference DESC;
+
+-- The most significant increase in HD in this group occurs among Males aged 55-59.
+
+
+
+Select * from heart_data;
+
+
+-- Observe changes in average sleep time, general health, smoking habits, and BMI during the surge of heart disease in both males and females.
+SELECT 
+    AgeCategory,
+    Sex, 
+    ROUND(AVG(SleepTime), 2) || ' hours' AS AvgSleep, 
+    ROUND(AVG(CleanGenHealth), 2) || ' out of 5' AS GeneralHealth, 
+    GenHealth,
+    ROUND(AVG(BMI), 2) AS AvgBMI,
+    CASE 
+        WHEN AVG(BMI) > 30 THEN 'Obese'
+        WHEN AVG(BMI) >= 25.0 AND AVG(BMI) <= 29.9 THEN 'Overweight'
+        WHEN AVG(BMI) >= 18.5 AND AVG(BMI) <= 24.9 THEN 'Healthy'
+        ELSE 'Underweight'
+    END AS 'BMI_Range', 
+    (ROUND((SUM(CASE WHEN Smoking = 'Yes' THEN 1 ELSE 0 END)* 1.0 / COUNT(*)), 2) * 100) || '%' AS Smokes
+FROM heart_data
+WHERE 
+    (Sex = 'Female' AND HeartDisease = 'Yes' AND AgeCategory LIKE '75%')
+    OR (Sex = 'Male' AND HeartDisease = 'Yes' AND AgeCategory LIKE '55%')
+GROUP BY AgeCategory, Sex;
+
+
+-- During the upsurge of heart disease, both males and females tend to have recommended sleep durations, and relatively good/fair health but exhibit tendencies toward being overweight or obese.
+-- Elevated BMI often correlates with increased risks of heart disease due to associated factors like high blood pressure and cholesterol levels.
+-- Additionally, smoking habits contribute to exacerbating the risk or severity of heart disease.
+
+
