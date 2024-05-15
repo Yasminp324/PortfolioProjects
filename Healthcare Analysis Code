@@ -1,0 +1,325 @@
+-- I am selecting the data I'll be working with
+select * from patient;
+
+
+-- something I missed during the cleaning - creating a column for the definition only for each drg_code
+-- I'll do this by selecting the part of the data I want, which is the definition, and then altering and updating the table.
+select 
+    SUBSTR(drg_definition, INSTR(drg_definition, '- ') + 2)
+from 
+    patient;
+
+ALTER TABLE patient ADD COLUMN description TEXT;
+
+UPDATE patient
+SET Description = SUBSTR(drg_definition, INSTR(drg_definition, '- ') + 2);
+
+
+
+
+-- I want to see how many distinct codes there are
+select 
+    distinct DRG_Code
+from
+    patient;
+
+-- there are 100 different unique DRG Codes. 
+
+
+-- I'm interested in the average total payments for each DRG 
+SELECT
+    description,
+    AVG(avg_total_payments) AS avg_total_payments
+FROM 
+    patient
+GROUP BY
+    description
+ORDER BY 
+    avg_total_payments DESC;
+
+
+
+-- Given the amount we're working with, we want to identify the DRGs with the highest average total payments
+-- We use average total payments because it represents the actual amount received by healthcare providers for a specific procedure
+
+
+
+select
+      drg_code
+    , description
+    , ROUND(avg(avg_total_payments),2) as Avg_Total_Payments
+from
+    patient
+group by drg_code
+order by  Avg_Total_Payments desc
+limit 10;
+-- This query retrieves the top 10 DRG codes with the highest average total payments, along with their descriptions, rounded to two decimal places.   
+/*  
+The first set includes DRGs with much higher average total payments, ranging from approximately $20,000 to $44,000. 
+These DRGs typically involve more complex and resource-intensive procedures or treatments, such as septicemia, 
+infectious diseases with major complications, and respiratory system diagnoses requiring ventilator support.
+*/
+
+-- Let's see the top 10 hospital referral cities with the highest average total payment
+SELECT 
+    hospital_referral_state_abbreviated as hospital_referral_state,
+    hospital_referral_region_city AS hospital_referral_city,
+    AVG(avg_total_payments) AS avg_total_payments,
+    description
+FROM 
+    patient
+GROUP BY 
+    hospital_referral_city
+ORDER BY 
+    avg_total_payments DESC
+LIMIT 10;
+-- CA and NY are two of the most expensive cities in the US
+
+
+
+-- We can also explore how the total average payments for these top DRGs vary across different hospital referral regions
+SELECT 
+      hospital_referral_region_city as hospital_referral_city
+    , hospital_referral_state_abbreviated as hospital_referral_state
+    , drg_code
+    , description
+    , ROUND(avg(avg_total_payments),2) as Avg_Total_Payments
+ from patient
+ group by 
+      hospital_referral_city
+    , hospital_referral_state
+    , drg_code
+    , description
+ order by Avg_Total_Payments desc
+ limit 10;
+/*
+It's evident that certain DRGs, such as those related to severe sepsis and respiratory system diagnoses with ventilator support, 
+have substantially higher average total payments compared to others
+*/
+
+-- Can we identify any patterns or outliers in the distribution of average total payments across DRGs and regions?
+
+
+-- First, identify any outliers. we'll do this by finding the quartiles. 
+
+WITH SortedPayments AS (
+    SELECT
+        avg_total_payments,
+        ROW_NUMBER() OVER (ORDER BY avg_total_payments) AS row_num,
+        COUNT(*) OVER () AS total_count
+    FROM
+        patient
+)
+SELECT
+    AVG(avg_total_payments) AS median,
+    (SELECT avg_total_payments FROM SortedPayments WHERE row_num = (total_count + 1) / 4) AS Q1,
+    (SELECT avg_total_payments FROM SortedPayments WHERE row_num = (total_count + 1) / 2) AS Q2,
+    (SELECT avg_total_payments FROM SortedPayments WHERE row_num = 3 * (total_count + 1) / 4) AS Q3
+FROM
+    SortedPayments;
+-- This CTE named SortedPayments organizes the dataset by quartiles, sorting entries by avg_total_payments and assigning row numbers. 
+-- This setup serves as a foundation for analyzing outliers and patterns within the payment distribution.
+
+
+-- How much of the data is under/above the 1st and 3rd quartiles?
+
+WITH SortedPayments AS (
+    SELECT
+        avg_total_payments,
+        ROW_NUMBER() OVER (ORDER BY avg_total_payments) AS row_num,
+        COUNT(*) OVER () AS total_count
+    FROM
+        patient
+),
+Quartiles AS (
+    SELECT
+        (total_count + 1) / 4 AS Q1_row_num,
+        3 * (total_count + 1) / 4 AS Q3_row_num
+    FROM
+        SortedPayments
+    LIMIT 1
+),
+Outliers AS (
+    SELECT
+        COUNT(*) AS outlier_count
+    FROM
+        SortedPayments SP
+    JOIN
+        Quartiles Q ON SP.row_num <= Q.Q1_row_num OR SP.row_num >= Q.Q3_row_num
+)
+SELECT
+   round((o.outlier_count * 100.0) / (SELECT total_count FROM SortedPayments)) || '%' AS percentage_outliers
+FROM
+    Outliers o;
+-- 50% of my data falls outside of the quartiles-  which may not be something alarming considering the payment trends of medical procedures in the U.S.
+-- Other factors to consider may be variability in procedure costs, complexity of the healthcare system, high cost of specialized procedures, billing, etc
+
+
+WITH SortedPayments AS (
+    SELECT
+        avg_total_payments,
+        ROW_NUMBER() OVER (ORDER BY avg_total_payments) AS row_num,
+        COUNT(*) OVER () AS total_count
+    FROM
+        patient
+),
+Quartiles AS (
+    SELECT
+        (total_count + 1) / 4 AS Q1_row_num,
+        (total_count + 1) / 2 AS Q2_row_num,
+        3 * (total_count + 1) / 4 AS Q3_row_num
+    FROM
+        SortedPayments
+    LIMIT 1
+)
+SELECT
+    SP.avg_total_payments,
+    CASE 
+        WHEN SP.row_num <= Q.Q1_row_num THEN 'Below Q1'
+        WHEN SP.row_num > Q.Q1_row_num AND SP.row_num <= Q.Q2_row_num THEN 'Between Q1 and Median'
+        WHEN SP.row_num > Q.Q2_row_num AND SP.row_num <= Q.Q3_row_num THEN 'Between Median and Q3'
+        ELSE 'Above Q3'
+    END AS quartile_category
+FROM
+    SortedPayments SP
+JOIN
+    Quartiles Q ON true;
+
+-- This query categorizes each average total payment into quartiles, providing a comprehensive overview of the distribution and identifying outliers in the dataset, which is crucial for understanding payment trends and potential anomalies in healthcare reimbursement.
+
+
+
+
+/* 
+
+Given that we've observed significant variation in payment distribution, with 50% of the data falling outside of the quartiles, it's crucial 
+to understand the role of Medicare payments in contributing to overall reimbursement. Let's delve into the data to analyze the proportion of
+  Medicare payments relative to total payments and explore any variations among providers and DRGs. This analysis will provide valuable 
+  insights into the Medicare reimbursement landscape and help us understand its impact on healthcare providers and procedures.
+
+*/
+
+
+
+SELECT
+    drg_code, 
+    description,
+    avg_total_payments, 
+    avg_medicare_payments, 
+    round((avg_medicare_payments/avg_total_payments) * 100, 2)||'%' as medicare_coverage_percentage
+FROM 
+    patient
+GROUP BY
+    drg_code, 
+    description
+ORDER BY 
+    medicare_coverage_percentage DESC;
+-- This gives a broad overview of average medicare coverage percentages for each DRG and a description combination
+-- its overview is useful for understanding broad trends across different medical conditions  and treatments
+
+
+
+-- let's separate it by region
+    
+SELECT
+    drg_code,
+    description,
+    provider_state,
+    COUNT(*) AS total_count,
+    AVG(avg_total_payments) OVER (PARTITION BY drg_code, provider_state) AS drg_avg_payment,
+    AVG(avg_medicare_payments) OVER (PARTITION BY drg_code, provider_state) AS avg_medicare_payments,
+    ROUND((AVG(avg_medicare_payments) / AVG(avg_total_payments)) * 100, 2) AS medicare_coverage_percentage
+FROM 
+    patient
+GROUP BY
+    drg_code, 
+    description,
+    provider_state
+ORDER BY 
+    drg_code ASC, provider_state ASC;
+-- Insights into medicare reimbursement variations: we see the average total and medicare payments across all DRGs and regions, offering insights into how reimbursement varies based on medical conditions and geographic locations
+-- Identification of high-cost DRGs and Regions: by analyzing average and medicare coverage payments, we can see which regions were lower or higher, potentially allowing for strategization for resource allocation to optimize financial planning.
+-- Benchmarking and performance evaluation: Comparing Medicare percentages across DRGs and regions enables benchmarking against industry standards and evaluating the performance of healthcare facilities, which could lead to improvements in cost-efficiency and revenue management strategies.
+
+
+
+-- Let's explore how some DRG codes are priced depending on the region
+-- We'll be looking at DRG codes that have a significant impact on costs: 
+
+-- top 2 most expensive
+select 
+    distinct drg_code, 
+    description,
+    avg_total_payments
+from
+    patient
+order by avg_total_payments desc
+limit 2;
+-- respiratory illness w ventilator and infectious&parasitic disease
+
+
+-- Top 2 most expensive procedures
+SELECT
+    drg_code,
+    description,
+    avg_total_payments AS avg_total_payments
+FROM 
+    patient
+GROUP BY
+    drg_code, 
+    description
+ORDER BY 
+    avg_total_payments DESC
+LIMIT 2;
+-- RESPIRATORY SYSTEM DIAGNOSIS W VENTILATOR SUPPORT 96+ HOURS
+-- INFECTIOUS & PARASITIC DISEASES W O.R. PROCEDURE W MCC
+
+
+-- Top 2 least expensive procedures
+SELECT
+    drg_code,
+    description,
+    AVG(avg_total_payments) AS avg_total_payments
+FROM 
+    patient
+GROUP BY
+    drg_code, 
+    description
+ORDER BY 
+    avg_total_payments ASC
+LIMIT 2;
+-- CHEST PAIN
+-- CARDIAC ARRHYTHMIA & CONDUCTION DISORDERS W/O CC/MCC
+
+
+
+
+-- Now we'll see how the average total cost compares across all regions
+-- quick google search suggests NC+SD is the most expensive while HI+MI is most affordable
+
+select
+    drg_code,
+    description,
+    provider_state, 
+    avg_total_payments,
+    provider_city
+from
+    patient
+WHERE 
+    drg_code in (207, 853, 313, 310) and -- top 2 least and most expensive procedures, on avg
+    provider_state in('MI', 'HI', 'NC', 'SD') -- top 2 least/most affordable healthcare
+group by
+    drg_code, 
+    description,
+    provider_state
+order by
+    avg_total_payments DESC;
+-- This query provides insights into how the average total payments for the top 2 least and most expensive medical procedures vary across different regions,
+--  focusing on the top 2 least and most affordable healthcare regions.
+-- By analyzing the average total payments for specific procedures in different regions, healthcare providers and policymakers can better understand the
+--  cost dynamics and disparities in healthcare expenditure, aiding in resource allocation and policy decision-making.
+
+
+
+
+
