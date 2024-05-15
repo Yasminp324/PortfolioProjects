@@ -62,6 +62,8 @@ EFA involved exploring the sales data to answer key questions, such as:
 
 #### Data Analysis 
 
+This is a query that helped guide my analysis by calculating quartiles (Q1, Q2, and Q3) and the median of the average total payments from the dataset. Quartiles divide the data into four equal parts, providing insights into the distribution of average total payments. The median represents the middle value of the dataset and is another measure of central tendency. Understanding quartiles and the median helps in identifying outliers, assessing the spread of the data, and gaining a deeper understanding of payment trends within the dataset.
+
 ``` sql
 WITH SortedPayments AS (
     SELECT
