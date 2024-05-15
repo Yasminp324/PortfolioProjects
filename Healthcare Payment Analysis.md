@@ -45,7 +45,7 @@ In the data preparation phase, I performed the following tasks:
 2. Adjusted data types for consistency.
 3. Removed duplicate entries to ensure data integrity.
 4. Utilized Excel functions such as =MID(), =FIND(), =LEN(), and =LEFT() to extract specific portions of cells for standardization.
-5. Adding/Updating database
+5. Adding/Updating the database
 
 
 
@@ -115,7 +115,7 @@ The financial dashboard's results are summarized as follows:
 
 2. Regional Cost Analysis: Conduct a detailed examination of cost disparities across hospital referral regions to understand underlying factors contributing to variations in healthcare expenditure. This analysis can inform targeted interventions to address cost inefficiencies and improve affordability for patients.
 
-3. Medicare Reimbursement Optimization: Explore strategies to maximize Medicare reimbursement rates by ensuring compliance with billing regulations, negotiating favorable reimbursement agreements, and optimizing coding practices to accurately reflect the complexity of services provided..
+3. Medicare Reimbursement Optimization: Explore strategies to maximize Medicare reimbursement rates by ensuring compliance with billing regulations, negotiating favorable reimbursement agreements, and optimizing coding practices to accurately reflect the complexity of services provided.
 
 ### Recommendations
 
@@ -125,13 +125,13 @@ Based on the analysis, I recommend the following actions:
 
 2. Regional Cost Analysis: Conduct a detailed examination of cost disparities across hospital referral regions to understand underlying factors contributing to variations in healthcare expenditure. This analysis can inform targeted interventions to address cost inefficiencies and improve affordability for patients.
 
-3. Medicare Reimbursement Optimization: Explore strategies to maximize Medicare reimbursement rates by ensuring compliance with billing regulations, negotiating favorable reimbursement agreements, and optimizing coding practices to accurately reflect the complexity of services provided..
+3. Medicare Reimbursement Optimization: Explore strategies to maximize Medicare reimbursement rates by ensuring compliance with billing regulations, negotiating favorable reimbursement agreements, and optimizing coding practices to accurately reflect the complexity of services provided.
 
 
 
 ### Limitations
 - Data Completeness and Granularity: One significant limitation is the completeness and granularity of the data available. While the dataset provides insights into average total payments and Medicare reimbursement percentages for various procedures across different regions, it may lack detailed information on specific cost drivers, patient demographics, or clinical outcomes. Without granular data, it can be challenging to perform deeper analyses or identify nuanced patterns that could inform more targeted financial strategies.
 
-- SQLITE Database Constraints: Working with SQLITE as the database management system imposes limitations on the complexity of analyses that can be performed. SQLITE is designed for lightweight, single-user applications, and may not support advanced analytics techniques or handle large datasets efficiently. As a result, the scope and depth of the financial analysis may be constrained by the capabilities of the database platform.
+- SQLite Database Constraints: Working with SQLite as the database management system imposes limitations on the complexity of analyses that can be performed. SQLite is designed for lightweight, single-user applications, and may not support advanced analytics techniques or handle large datasets efficiently. As a result, the scope and depth of the financial analysis may be constrained by the capabilities of the database platform.
 
 
