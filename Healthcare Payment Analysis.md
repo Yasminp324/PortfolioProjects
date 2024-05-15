@@ -84,6 +84,8 @@ FROM
 ```
 
 
+
+This query serves as a focal point for analyzing the financial aspects of healthcare services by pinpointing the top 2 least and most expensive medical procedures within specific states. By targeting DRG codes associated with varying payment levels and filtering by provider states, it offers a nuanced view of regional cost disparities in healthcare. This information aids in understanding the financial landscape of healthcare delivery, guiding decisions on resource allocation and financial planning.
 ``` sql
 select
     drg_code,
