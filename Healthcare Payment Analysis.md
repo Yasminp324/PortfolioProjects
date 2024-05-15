@@ -63,8 +63,43 @@ EFA involved exploring the sales data to answer key questions, such as:
 #### Data Analysis 
 
 ``` sql
+WITH SortedPayments AS (
+    SELECT
+        avg_total_payments,
+        ROW_NUMBER() OVER (ORDER BY avg_total_payments) AS row_num,
+        COUNT(*) OVER () AS total_count
+    FROM
+        patient
+)
+SELECT
+    AVG(avg_total_payments) AS median,
+    (SELECT avg_total_payments FROM SortedPayments WHERE row_num = (total_count + 1) / 4) AS Q1,
+    (SELECT avg_total_payments FROM SortedPayments WHERE row_num = (total_count + 1) / 2) AS Q2,
+    (SELECT avg_total_payments FROM SortedPayments WHERE row_num = 3 * (total_count + 1) / 4) AS Q3
+FROM
+    SortedPayments;
+
+```
 
 
+``` sql
+select
+    drg_code,
+    description,
+    provider_state, 
+    avg_total_payments,
+    provider_city
+from
+    patient
+WHERE 
+    drg_code in (207, 853, 313, 310) and -- top 2 least and most expensive procedures, on avg
+    provider_state in('MI', 'HI', 'NC', 'SD') -- top 2 least/most afforadable healthcare
+group by
+    drg_code, 
+    description,
+    provider_state
+order by
+    avg_total_payments DESC;
 ```
 
 
